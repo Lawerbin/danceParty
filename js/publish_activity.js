@@ -1,7 +1,15 @@
 
+'use strict';
+
+//发布者id
+var userId = getStorage('userId');
 
 $(document).ready(function () {
-	
+
+	if(!userId) {
+		alert('please 先注册');
+		location.href = 'register.html';
+	}
 	// label选择
 	$('.label').each(function (e) {
 		$(this).click(function () {
@@ -19,14 +27,18 @@ $(document).ready(function () {
 })
 
 function publishActivity (argument) {
-	//发布者id
-	var user_id = getStorage('user_id');
+		
 	// 活动内容
 	var name = $('input[name=name]').val();
-	var time = $('input[name=time]').val();
+	var date = $('input[name=date]').val();
+	var hour = $('input[name=hour]').val();
 	var place = $('input[name=place]').val();
 	var time_len = $('select[name=time_len]').val();
 	var label = '';
+
+	// 日期时间拼接
+	var time = date + ' ' + hour;
+	// 标签内容读取
 	$.each($('.active'), function () {
 		if (label) {
 			label += ',' + $(this).text();
@@ -36,16 +48,16 @@ function publishActivity (argument) {
 		}
 	});
 	var note = $('input[name=note]').val();
-	if(!name || !time || !place || !time_len || !label){
+
+	// 空值检测
+	if(!name || !date || !hour || !place || !time_len || !label){
 		alert("未全部填写完成");
-	}
-	else{
-		console.log(label);		
+	} else{
 		$.ajax({
 			url: domain + '/publish/activity',
 			type: 'post',
 			data:{
-				user_id: user_id,
+				user_id: userId,
 				name: name,
 				time: time,
 				place: place,
@@ -54,10 +66,9 @@ function publishActivity (argument) {
 				note: note
 			},
 			dataType: 'json',
-			success:function(resource){
-				var data = JSON.parse(resource);
+			success:function(data){
 				if(data.code == 0){
-					alert('发布成功');
+					alert('发布成功!');
 					window.location.href = 'activity.html';
 				}
 				else{

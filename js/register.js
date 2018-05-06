@@ -1,5 +1,7 @@
 'use strict';
 
+var imgUrl = '';
+
 $(document).ready(function () {
 
 	// 下拉菜单选择
@@ -53,16 +55,64 @@ function getList () {
 	});
 }
 
-function upload(){
-	var file = $('.photo').find('input')[0].files[0];
-	//console.log(file);
+function changeImg() {
 
+	// 图片更改后异步提交表单上传服务器，返回url
+	var form = $("#img_form");
+	var options = {
+        url: domain + '/upload/img', //上传文件的路径
+        type:'post',
+        success:function(data){
+        	data = JSON.parse(data);
+          if(data.code == 0) {
+          	imgUrl = data.data.url;
+          } else {
+          	alert('上传图片出错！');
+          }
+        }
+    };
+	form.ajaxSubmit(options);
+
+	// 在前端显示上传的图片
+	var file = $('.photo').find('input')[0].files[0];
 	var reader = new FileReader();
 	reader.onload = function(e){
 		var imgFile = e.target.result;
 		console.log(imgFile);
 		$('.photo-img').attr('src',imgFile);
 		$('.photo-img').attr('style','display:block');
+		$('.zhaopian').hide();
+		$('#img').hide();
+	}
+	reader.readAsDataURL(file);
+}
+function changeImg() {
+	// 图片更改后异步提交表单上传服务器，返回url
+	var form = $("#img_form");
+	var options = {
+    url: domain + '/upload/img', //上传文件的路径
+    type:'post',
+    success:function(data){
+    	data = JSON.parse(data);
+      if(data.code == 0) {
+      	imgUrl = data.data.url;
+      } else {
+      	alert('上传图片出错！');
+      }
+    }
+  };
+	form.ajaxSubmit(options);
+
+	// 在前端显示上传的图片
+	var file = $('.photo').find('input')[0].files[0];
+	var reader = new FileReader();
+	reader.onload = function(e){
+		var imgFile = e.target.result;
+		console.log(imgFile);
+		$('.photo-img').attr('src',imgFile);
+		$('.photo-img').attr('style','display:block');
+		$('.zhaopian').hide();
+		$('#img').hide();
 	}
 	reader.readAsDataURL(file);
 }
@@ -70,10 +120,9 @@ function upload(){
 // 点击下一步
 function nextStep () {
 
-		
 	var name = $('input[name = name]').val();
 	var identity = $('.chosen-identity').text();
-	var school = $('select[name = school] .right').text();
+	var school = $('#school').find('option:selected').text();
 	var gender = $('.chosen-gender').text();
 	var phone = $('input[name = phone]').val();
 	var label = '';
@@ -86,43 +135,39 @@ function nextStep () {
 		}
 	});
 
-	//头像图片
-	var img_url = $('.photo-img').attr('src');
-
 	//社会工作者无须选择学校，是学生但未选择学校要重新输入
 	if(!name || !gender || !phone || !label || (identity =="学生" && school=="选择你的大学")){
 		alert("未全部填写完成!");
 	}
-	else{
+	else if (!imgUrl) {
+		alert('fucking you，上传照骗');
+	} else {
 		$.ajax({
-	    url: domain + '/update/user/info',
-	    type: 'post',
-	    dataType: 'json',
-	    data: {
-			name:name,
-			school: school,
-			label: label,
-			gender: gender,
-			phone: phone,
-			img_url: img_url	    	
-	    },
-	    success: function(data) {
+		    url: domain + '/user/register',
+		    type: 'post',
+		    dataType: 'json',
+		    data: {
+					name:name,
+					type: identity,
+					school: school,
+					label: label,
+					gender: gender,
+					phone: phone,
+					img_url: imgUrl	    	
+		    },
+		    success: function(data) {
 	        if(data.code == 0){
 	        	alert("注册成功！");
-	        	setStorage('user_id',data.id);
-				window.location.href = 'mine.html';
+	        	setStorage('userId',data.data.id);
+						window.location.href = 'mine.html';
 	        }
 	        else
 	          alert("注册失败！");
-	    },
-	    error: function(err) {
-	      console.log(err);
-	    }
-	});
-		// 发送注册请求，成功后跳转
-		//setStorage('user_id', '1');
-		alert(getStorage('user_id'));
-		
-		// alert('sth');
+		    },
+		    error: function(err) { 
+	        alert(err);
+		      console.log(err);
+		    }
+		});
 	}
 }

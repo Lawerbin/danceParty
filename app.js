@@ -2,6 +2,8 @@
 "use strict"
 
 var express             = require('express');
+var multer = require("multer");
+// var md5 = require('md5');
 var app                 = express();
 var bodyParse           = require('body-parser');
 var cookieParser        = require('cookie-parser');
@@ -11,6 +13,19 @@ var user = require('./backend/user');
 var activity = require('./backend/activity');
 
 var jsonData = require('./data.json')
+var storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, './uploads');
+    },
+    filename: function(req, file, cb) {
+      // var fileFormat =(file.originalname).split(".");
+      // cb(null, file.fieldname + '-' + md5(file) + "." + fileFormat[fileFormat.length - 1]);
+      cb(null, `${Date.now()}-${file.originalname}`)
+    }
+})
+var upload = multer({ storage: storage });
+var imgBaseUrl = '../'
+// var imgBaseUrl = '/Users/shaodong/myGit/danceParty/';
 
 app.use(cookieParser());
 app.use(bodyParse.urlencoded({extended:false}));
@@ -56,8 +71,8 @@ app.get('/all/school', school.getAll);
 // //用户模块2：审核用户信息
 // app.post('/update/user/info', function (req, res) {
 //   var result = {};
-//   result.data = jsonData.user;
-//   result.errcode = 0;
+//   result.data = jsonData.user[1];
+//   result.code = 0;
 //   result.errmsg = '';
 //   res.end(JSON.stringify(result));
 // })
@@ -104,6 +119,9 @@ app.get('/all/school', school.getAll);
 //获取用户信息接口
 app.get('/user/info', user.getInfo);
 
+//获取用户信息接口
+app.post('/upload/img', upload.array('img', 40), user.uploadImg);
+
 //更新用户将信息接口
 app.post('/update/user/info',user.updateInfo);
 
@@ -125,6 +143,6 @@ app.post('/cancel/activity', activity.cancel);
 //用户注册模块
 app.post('/user/register', user.register);
 // 监听3000端口
-var server=app.listen(3000, function () {
-	console.log('listening at =====> http://127.0.0.1:3000......');
+var server=app.listen(3000, '0.0.0.0', function () {
+	console.log('listening at =====> http://0.0.0.0:3000......');
 }) ;
